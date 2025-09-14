@@ -1,0 +1,70 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+bin/
+obj/
+[Bb]uild/
+[Ll]og/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+
+# NuGet packages
+*.nupkg
+*.snupkg
+# The packages folder can be ignored if you use Package Restore
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+# Uncomment if necessary
+#!**/[Pp]ackages/repositories.config
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
+# User-specific files
+*.rsuser
+*.userprefs
+
+# Test results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# Logs
+*.log
+
+# Backup & temp files
+*~
+*.swp
+*.tmp
+*.bak
+*.backup
+*.orig
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Publish artifacts
+publish/
+out/
+
+# Configuration files
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+
+# EF Core Migrations snapshot (optional, comment if you want in repo)
+Migrations/
+
+# Debug PNGs (from LabelGenerator.cs)
+debug_barcode.png
+debug_qr.png
