@@ -166,10 +166,10 @@ namespace LabelDesignerAPI.Services
                 {
                     case "text":
                     case "dynamic-text":
+                    case "product-code":
                         RenderText(container);
                         break;
                     case "barcode":
-                    case "product-code":
                         RenderBarcode(container);
                         break;
                     case "qrcode":
@@ -256,15 +256,19 @@ namespace LabelDesignerAPI.Services
 
         private void RenderBarcode(IContainer container)
         {
-            string barcodeData = GetDataFieldValue("dataField", null);
+            string barcodeData = null;
 
+            // First, try to get data from the request using dataField (user input takes priority)
+            barcodeData = GetDataFieldValue("dataField", null);
+
+            // If no data from user input, try to get static data from the element's properties
             if (string.IsNullOrEmpty(barcodeData) &&
-                _element.Properties.TryGetValue("data", out var staticDataObj) &&
-                staticDataObj != null)
+                _element.Properties.TryGetValue("data", out var staticDataObj) && staticDataObj != null)
             {
                 barcodeData = staticDataObj.ToString();
             }
 
+            // If still no data, use a default
             if (string.IsNullOrEmpty(barcodeData))
                 barcodeData = "123456789";
 
@@ -272,7 +276,7 @@ namespace LabelDesignerAPI.Services
             {
                 var barcodeBytes = BarcodeService.GenerateBarcode(barcodeData);
 
-                // 🔥 Force scaling into element’s width/height from layoutJson
+                // 🔥 Force scaling into element's width/height from layoutJson
                 container
                     .Width((float)_element.Width)
                     .Height((float)_element.Height)
@@ -287,15 +291,19 @@ namespace LabelDesignerAPI.Services
 
         private void RenderQRCode(IContainer container)
         {
-            string qrData = GetDataFieldValue("dataField", null);
+            string qrData = null;
 
+            // First, try to get data from the request using dataField (user input takes priority)
+            qrData = GetDataFieldValue("dataField", null);
+
+            // If no data from user input, try to get static data from the element's properties
             if (string.IsNullOrEmpty(qrData) &&
-                _element.Properties.TryGetValue("data", out var staticDataObj) &&
-                staticDataObj != null)
+                _element.Properties.TryGetValue("data", out var staticDataObj) && staticDataObj != null)
             {
                 qrData = staticDataObj.ToString();
             }
 
+            // If still no data, use a default
             if (string.IsNullOrEmpty(qrData))
                 qrData = "123456789";
 
