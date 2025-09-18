@@ -180,6 +180,9 @@ namespace LabelDesignerAPI.Services
                     case "logo":
                         RenderImage(container);
                         break;
+                    case "dynamic-image":
+                        RenderDynamicImage(container);
+                        break;
                     case "rectangle":
                         RenderRectangle(container);
                         break;
@@ -370,6 +373,98 @@ namespace LabelDesignerAPI.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"Image rendering failed: {ex.Message}");
+                container
+                    .Width((float)_element.Width)
+                    .Height((float)_element.Height)
+                    .Background("#FFE0E0")
+                    .AlignCenter()
+                    .AlignMiddle()
+                    .Text("[Image Error]").FontSize(8);
+            }
+        }
+
+        private void RenderDynamicImage(IContainer container)
+        {
+            try
+            {
+                // First, try to get data from the request using element ID (for dynamic-image elements)
+                string imageData = null;
+                if (_data.TryGetValue(_element.Id, out var elementData))
+                {
+                    imageData = elementData;
+                }
+
+                // If no data from element ID, try to get data from dataField
+                if (string.IsNullOrEmpty(imageData))
+                {
+                    imageData = GetDataFieldValue("dataField", null);
+                }
+
+                // If no data from user input, try to get static data from the element's properties
+                if (string.IsNullOrEmpty(imageData) &&
+                    _element.Properties.TryGetValue("data", out var staticDataObj) && staticDataObj != null)
+                {
+                    imageData = staticDataObj.ToString();
+                }
+
+                // If still no data, use a default placeholder
+                if (string.IsNullOrEmpty(imageData))
+                {
+                    container
+                        .Width((float)_element.Width)
+                        .Height((float)_element.Height)
+                        .Background("#E0E0FF")
+                        .AlignCenter()
+                        .AlignMiddle()
+                        .Text("[Dynamic Image]").FontSize(10);
+                    return;
+                }
+
+                // Try to parse as base64 image data
+                byte[]? imageBytes = null;
+                try
+                {
+                    if (imageData.Contains(","))
+                    {
+                        imageData = imageData.Split(',')[1];
+                    }
+                    imageBytes = Convert.FromBase64String(imageData);
+                }
+                catch
+                {
+                    // If not base64, treat as placeholder text
+                    container
+                        .Width((float)_element.Width)
+                        .Height((float)_element.Height)
+                        .Background("#E0E0FF")
+                        .AlignCenter()
+                        .AlignMiddle()
+                        .Text(imageData).FontSize(10);
+                    return;
+                }
+
+                if (imageBytes != null)
+                {
+                    // 🔥 Force scaling into the element box
+                    container
+                        .Width((float)_element.Width)
+                        .Height((float)_element.Height)
+                        .Image(imageBytes, ImageScaling.FitArea);
+                }
+                else
+                {
+                    container
+                        .Width((float)_element.Width)
+                        .Height((float)_element.Height)
+                        .Background("#E0E0FF")
+                        .AlignCenter()
+                        .AlignMiddle()
+                        .Text("[Dynamic Image]").FontSize(10);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Dynamic image rendering failed: {ex.Message}");
                 container
                     .Width((float)_element.Width)
                     .Height((float)_element.Height)
