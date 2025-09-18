@@ -51,10 +51,21 @@ namespace LabelDesignerAPI.Controllers
         {
             try
             {
-                // Generate preview with sample data or provided data
+                // If templateId is provided, get the template from database
+                string layoutJson = request.LayoutJson;
+                if (request.TemplateId > 0)
+                {
+                    var template = _context.Templates.Find(request.TemplateId);
+                    if (template != null)
+                    {
+                        layoutJson = template.LayoutJson;
+                    }
+                }
+
+                // Generate preview with provided data or sample data
                 var labelRequest = new LabelRequest
                 {
-                    TemplateId = 0, // Not used for preview
+                    TemplateId = request.TemplateId,
                     Data = request.Data ?? new Dictionary<string, string>
                     {
                         { "ProductName", "Sample Product" },
@@ -63,9 +74,18 @@ namespace LabelDesignerAPI.Controllers
                     }
                 };
 
-                var pdfBytes = LabelGenerator.Generate(labelRequest, request.LayoutJson);
+                var pdfBytes = LabelGenerator.Generate(labelRequest, layoutJson);
 
-                return File(pdfBytes, "application/pdf", "preview.pdf");
+                // Return appropriate content type based on format
+                if (request.Format?.ToLower() == "png")
+                {
+                    // For now, return PDF. In a real implementation, you'd convert PDF to PNG
+                    return File(pdfBytes, "application/pdf", "preview.pdf");
+                }
+                else
+                {
+                    return File(pdfBytes, "application/pdf", "preview.pdf");
+                }
             }
             catch (Exception ex)
             {

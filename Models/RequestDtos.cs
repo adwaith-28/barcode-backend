@@ -32,7 +32,9 @@
 
     public class PreviewLabelRequest
     {
+        public int TemplateId { get; set; }
         public string LayoutJson { get; set; }
         public Dictionary<string, string> Data { get; set; }
+        public string Format { get; set; } = "pdf";
     }
 }

@@ -2,6 +2,7 @@
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using QuestPDF.Layout;
 using System.Text.Json;
 
 namespace LabelDesignerAPI.Services
@@ -46,26 +47,28 @@ namespace LabelDesignerAPI.Services
                         page.Size(new PageSize((float)pageWidth, (float)pageHeight, Unit.Point));
                         page.Margin(0);
 
-                        page.Content().Container().Height((float)pageHeight).Width((float)pageWidth).Stack(stack =>
+                        // Use a single container with absolute positioning for elements
+                        page.Content().Container(container =>
                         {
-                            // Background
+                            // Set background color if specified
                             if (!string.IsNullOrEmpty(layout.BackgroundColor) && layout.BackgroundColor != "#FFFFFF")
                             {
-                                stack.Item().Container()
-                                    .Width((float)pageWidth)
-                                    .Height((float)pageHeight)
-                                    .Background(layout.BackgroundColor);
+                                container.Background(layout.BackgroundColor);
                             }
 
-                            // Render elements in layers
+                            // Render elements in layers using absolute positioning
                             foreach (var element in layout.Elements.OrderBy(e => e.ZIndex))
                             {
-                                stack.Item().Container()
-                                    .TranslateX((float)element.X)
-                                    .TranslateY((float)element.Y)
-                                    .Width((float)element.Width)
-                                    .Height((float)element.Height)
-                                    .Component(new ElementRenderer(element, request.Data ?? new Dictionary<string, string>()));
+                                container.Element(element =>
+                                {
+                                    element
+                                        .Position(Position.Absolute)
+                                        .Left((float)element.X)
+                                        .Top((float)element.Y)
+                                        .Width((float)element.Width)
+                                        .Height((float)element.Height)
+                                        .Component(new ElementRenderer(element, request.Data ?? new Dictionary<string, string>()));
+                                });
                             }
                         });
                     });
