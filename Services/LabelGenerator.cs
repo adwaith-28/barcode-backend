@@ -19,17 +19,32 @@ namespace LabelDesignerAPI.Services
 
                 if (!string.IsNullOrEmpty(layoutJson) && layoutJson != "{}")
                 {
-                    layout = JsonSerializer.Deserialize<TemplateLayout>(layoutJson, new JsonSerializerOptions
+                    try
                     {
-                        PropertyNameCaseInsensitive = true
-                    });
+                        layout = JsonSerializer.Deserialize<TemplateLayout>(layoutJson, new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        });
+                        Console.WriteLine($"Successfully parsed layout with {layout?.Elements?.Count ?? 0} elements");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error parsing layout JSON: {ex.Message}");
+                        Console.WriteLine($"Layout JSON was: {layoutJson}");
+                    }
                 }
 
-                // If no custom layout, use default
+                // If no custom layout, create a minimal layout to avoid blank pages
                 if (layout == null || !layout.Elements.Any())
                 {
-                    Console.WriteLine("No custom layout found, using default template");
-                    return GenerateDefaultLabel(request);
+                    Console.WriteLine("No custom layout found, creating minimal layout");
+                    layout = new TemplateLayout
+                    {
+                        Width = 400,
+                        Height = 300,
+                        BackgroundColor = "#FFFFFF",
+                        Elements = new List<LayoutElement>()
+                    };
                 }
 
                 Console.WriteLine($"Using custom layout with {layout.Elements.Count} elements");
@@ -46,29 +61,32 @@ namespace LabelDesignerAPI.Services
                         page.Size(new PageSize((float)pageWidth, (float)pageHeight, Unit.Point));
                         page.Margin(0);
 
-                        // Use a single container with absolute positioning for elements
-                        page.Content().Container().Height((float)pageHeight).Width((float)pageWidth).Stack(stack =>
-                        {
-                            // Set background color if specified
-                            if (!string.IsNullOrEmpty(layout.BackgroundColor) && layout.BackgroundColor != "#FFFFFF")
+                        // Render entire page in a single container; use layers so content doesn't expand layout
+                        page.Content()
+                            .Container()
+                            .Width((float)pageWidth)
+                            .Height((float)pageHeight)
+                            .Layers(layers =>
                             {
-                                stack.Item().Container()
+                                // Always add a primary layer for the background
+                                layers.PrimaryLayer()
+                                    .Container()
                                     .Width((float)pageWidth)
                                     .Height((float)pageHeight)
-                                    .Background(layout.BackgroundColor);
-                            }
+                                    .Background(layout.BackgroundColor ?? "#FFFFFF");
 
-                            // Render elements in layers
-                            foreach (var element in layout.Elements.OrderBy(e => e.ZIndex))
-                            {
-                                stack.Item().Container()
-                                    .TranslateX((float)element.X)
-                                    .TranslateY((float)element.Y)
-                                    .Width((float)element.Width)
-                                    .Height((float)element.Height)
-                                    .Component(new ElementRenderer(element, request.Data ?? new Dictionary<string, string>()));
-                            }
-                        });
+                                // Elements layer (absolute positioning via translate)
+                                foreach (var element in layout.Elements.OrderBy(e => e.ZIndex))
+                                {
+                                    layers.Layer()
+                                        .Container()
+                                        .TranslateX((float)element.X)
+                                        .TranslateY((float)element.Y)
+                                        .Width((float)element.Width)
+                                        .Height((float)element.Height)
+                                        .Component(new ElementRenderer(element, request.Data ?? new Dictionary<string, string>()));
+                                }
+                            });
                     });
                 });
 
@@ -111,11 +129,19 @@ namespace LabelDesignerAPI.Services
                             // Price
                             stack.Item().PaddingTop(5).Text($"₹{price}").FontSize(12);
 
-                            // Barcode
-                            stack.Item().PaddingTop(10).Height(40).Image(barcodeBytes);
+                            // Barcode (constrain rendering to available box)
+                            stack.Item()
+                                .PaddingTop(10)
+                                .Height(40)
+                                .Image(barcodeBytes, ImageScaling.FitArea);
 
-                            // QR Code
-                            stack.Item().PaddingTop(5).Height(40).AlignRight().Image(qrBytes);
+                            // QR Code (square box to avoid aspect ratio overflow)
+                            stack.Item()
+                                .PaddingTop(5)
+                                .AlignRight()
+                                .Width(40)
+                                .Height(40)
+                                .Image(qrBytes, ImageScaling.FitArea);
 
                             // Code text
                             stack.Item().PaddingTop(5).Text(code).FontSize(8).FontColor("#666666");

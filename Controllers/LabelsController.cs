@@ -46,6 +46,42 @@ namespace LabelDesignerAPI.Controllers
             }
         }
 
+        [HttpPost("generate-custom")]
+        public IActionResult GenerateCustomLabel([FromBody] PreviewLabelRequest request)
+        {
+            try
+            {
+                // Use provided layout JSON or get from template
+                string layoutJson = request.LayoutJson;
+                if (string.IsNullOrEmpty(layoutJson) && request.TemplateId > 0)
+                {
+                    var template = _context.Templates.Find(request.TemplateId);
+                    if (template != null)
+                    {
+                        layoutJson = template.LayoutJson;
+                    }
+                }
+
+                if (string.IsNullOrEmpty(layoutJson))
+                    return BadRequest("No layout JSON provided");
+
+                // Create a label request for the generator
+                var labelRequest = new LabelRequest
+                {
+                    TemplateId = request.TemplateId,
+                    Data = request.Data ?? new Dictionary<string, string>()
+                };
+
+                var pdfBytes = LabelGenerator.Generate(labelRequest, layoutJson);
+
+                return File(pdfBytes, "application/pdf", $"label-{DateTime.Now:yyyyMMdd-HHmmss}.pdf");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error generating custom label: {ex.Message}");
+            }
+        }
+
         [HttpPost("preview")]
         public IActionResult PreviewLabel([FromBody] PreviewLabelRequest request)
         {
