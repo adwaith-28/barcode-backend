@@ -78,22 +78,15 @@ namespace LabelDesignerAPI.Services
                                 // Elements layer (absolute positioning via translate)
                                 foreach (var element in layout.Elements.OrderBy(e => e.ZIndex))
                                 {
-                                    var elementContainer = layers.Layer()
+                                    layers.Layer()
                                         .Container()
                                         .TranslateX((float)element.X)
                                         .TranslateY((float)element.Y)
                                         .Width((float)element.Width)
-                                        .Height((float)element.Height);
-
-                                    // Apply rotation if specified
-                                    if (element.Properties.TryGetValue("rotation", out var rotationObj) && 
-                                        float.TryParse(rotationObj?.ToString(), out float rotation) && 
-                                        rotation != 0)
-                                    {
-                                        elementContainer.Rotate(rotation);
-                                    }
-
-                                    elementContainer.Component(new ElementRenderer(element, request.Data ?? new Dictionary<string, string>()));
+                                        .Height((float)element.Height)
+                                        .Rotate(element.Properties.TryGetValue("rotation", out var rotationObj) && 
+                                               float.TryParse(rotationObj?.ToString(), out float rotation) ? rotation : 0f)
+                                        .Component(new ElementRenderer(element, request.Data ?? new Dictionary<string, string>()));
                                 }
                             });
                     });
@@ -240,33 +233,10 @@ namespace LabelDesignerAPI.Services
         private void RenderText(IContainer container)
         {
             string text = GetTextContent();
+            
+            // Apply all styling in a single fluent chain to avoid container reuse
             var textStyle = container.Text(text);
-            ApplyTextStyling(textStyle);
-        }
-
-        private string GetTextContent()
-        {
-            // Priority: bind to request.Data via dataField
-            if (_element.Properties.TryGetValue("dataField", out var dataFieldObj) && dataFieldObj != null)
-            {
-                var dataField = dataFieldObj.ToString();
-                if (_data.TryGetValue(dataField, out var dataValue))
-                    return dataValue;
-            }
-
-            // Frontend uses "content"
-            if (_element.Properties.TryGetValue("content", out var contentObj) && contentObj != null)
-                return contentObj.ToString();
-
-            // Backend originally used "text"
-            if (_element.Properties.TryGetValue("text", out var textObj) && textObj != null)
-                return textObj.ToString();
-
-            return "Sample Text";
-        }
-
-        private void ApplyTextStyling(TextSpanDescriptor textStyle)
-        {
+            
             // Font size
             if (_element.Properties.TryGetValue("fontSize", out var fontSizeObj) &&
                 int.TryParse(fontSizeObj?.ToString(), out int fontSize))
@@ -292,6 +262,28 @@ namespace LabelDesignerAPI.Services
                 styleObj?.ToString()?.ToLower() == "italic")
                 textStyle.Italic();
         }
+
+        private string GetTextContent()
+        {
+            // Priority: bind to request.Data via dataField
+            if (_element.Properties.TryGetValue("dataField", out var dataFieldObj) && dataFieldObj != null)
+            {
+                var dataField = dataFieldObj.ToString();
+                if (_data.TryGetValue(dataField, out var dataValue))
+                    return dataValue;
+            }
+
+            // Frontend uses "content"
+            if (_element.Properties.TryGetValue("content", out var contentObj) && contentObj != null)
+                return contentObj.ToString();
+
+            // Backend originally used "text"
+            if (_element.Properties.TryGetValue("text", out var textObj) && textObj != null)
+                return textObj.ToString();
+
+            return "Sample Text";
+        }
+
 
         private void RenderBarcode(IContainer container)
         {
