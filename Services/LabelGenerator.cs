@@ -175,7 +175,7 @@ namespace LabelDesignerAPI.Services
         }
     }
 
-    // Improved Element Renderer (MVP hackathon friendly)
+    // Improved Element Renderer 
     public class ElementRenderer : IComponent
     {
         private readonly LayoutElement _element;
@@ -240,7 +240,7 @@ namespace LabelDesignerAPI.Services
             // Font size
             if (_element.Properties.TryGetValue("fontSize", out var fontSizeObj) &&
                 int.TryParse(fontSizeObj?.ToString(), out int fontSize))
-                textStyle.FontSize(Math.Max(6, Math.Min(72, fontSize))); // Clamp between 6–72
+                textStyle.FontSize(Math.Max(6, Math.Min(72, fontSize))); 
             else
                 textStyle.FontSize(12);
 
@@ -289,7 +289,7 @@ namespace LabelDesignerAPI.Services
         {
             string barcodeData = null;
 
-            // First, try to get data from the request using dataField (user input takes priority)
+            // Try to get data from the request using dataField (user input takes priority)
             barcodeData = GetDataFieldValue("dataField", null);
 
             // If no data from user input, try to get static data from the element's properties
@@ -307,7 +307,7 @@ namespace LabelDesignerAPI.Services
             {
                 var barcodeBytes = BarcodeService.GenerateBarcode(barcodeData);
 
-                // 🔥 Force scaling into element's width/height from layoutJson
+                // Force scaling into element's width/height from layoutJson
                 container
                     .Width((float)_element.Width)
                     .Height((float)_element.Height)
@@ -324,7 +324,7 @@ namespace LabelDesignerAPI.Services
         {
             string qrData = null;
 
-            // First, try to get data from the request using dataField (user input takes priority)
+            // Try to get data from the request using dataField (user input takes priority)
             qrData = GetDataFieldValue("dataField", null);
 
             // If no data from user input, try to get static data from the element's properties
@@ -342,7 +342,6 @@ namespace LabelDesignerAPI.Services
             {
                 var qrBytes = BarcodeService.GenerateQRCode(qrData);
 
-                // 🔥 Same safe scaling
                 container
                     .Width((float)_element.Width)
                     .Height((float)_element.Height)
@@ -380,7 +379,6 @@ namespace LabelDesignerAPI.Services
 
                 if (imageBytes != null)
                 {
-                    // 🔥 Force scaling into the element box
                     container
                         .Width((float)_element.Width)
                         .Height((float)_element.Height)
@@ -414,7 +412,7 @@ namespace LabelDesignerAPI.Services
         {
             try
             {
-                // First, try to get data from the request using element ID (for dynamic-image elements)
+                // Try to get data from the request using element ID (for dynamic-image elements)
                 string imageData = null;
                 if (_data.TryGetValue(_element.Id, out var elementData))
                 {
@@ -472,7 +470,6 @@ namespace LabelDesignerAPI.Services
 
                 if (imageBytes != null)
                 {
-                    // 🔥 Force scaling into the element box
                     container
                         .Width((float)_element.Width)
                         .Height((float)_element.Height)

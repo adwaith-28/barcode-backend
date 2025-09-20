@@ -10,7 +10,7 @@
         public string[] RequiredFields { get; set; }
         public string Category { get; set; } = "Product";
         public bool IsPublic { get; set; } = true;
-        public string PreviewImage { get; set; } = string.Empty; // Add default value
+        public string PreviewImage { get; set; } = string.Empty;
     }
 
     public class UpdateTemplateRequest

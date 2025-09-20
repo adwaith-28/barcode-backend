@@ -26,7 +26,7 @@
     public class TextElement : LayoutElement
     {
         public string Text { get; set; } = "Sample Text";
-        public string DataField { get; set; } // Maps to request.Data["ProductName"]
+        public string DataField { get; set; } 
         public string FontFamily { get; set; } = "Arial";
         public int FontSize { get; set; } = 12;
         public string FontWeight { get; set; } = "normal";

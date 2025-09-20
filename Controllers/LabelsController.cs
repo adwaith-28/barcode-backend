@@ -115,7 +115,6 @@ namespace LabelDesignerAPI.Controllers
                 // Return appropriate content type based on format
                 if (request.Format?.ToLower() == "png")
                 {
-                    // For now, return PDF. In a real implementation, you'd convert PDF to PNG
                     return File(pdfBytes, "application/pdf", "preview.pdf");
                 }
                 else
