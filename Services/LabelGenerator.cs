@@ -78,13 +78,22 @@ namespace LabelDesignerAPI.Services
                                 // Elements layer (absolute positioning via translate)
                                 foreach (var element in layout.Elements.OrderBy(e => e.ZIndex))
                                 {
-                                    layers.Layer()
+                                    var elementContainer = layers.Layer()
                                         .Container()
                                         .TranslateX((float)element.X)
                                         .TranslateY((float)element.Y)
                                         .Width((float)element.Width)
-                                        .Height((float)element.Height)
-                                        .Component(new ElementRenderer(element, request.Data ?? new Dictionary<string, string>()));
+                                        .Height((float)element.Height);
+
+                                    // Apply rotation if specified
+                                    if (element.Properties.TryGetValue("rotation", out var rotationObj) && 
+                                        float.TryParse(rotationObj?.ToString(), out float rotation) && 
+                                        rotation != 0)
+                                    {
+                                        elementContainer.Rotate(rotation);
+                                    }
+
+                                    elementContainer.Component(new ElementRenderer(element, request.Data ?? new Dictionary<string, string>()));
                                 }
                             });
                     });
