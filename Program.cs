@@ -21,7 +21,7 @@ builder.Services.AddCors(options =>
                 "http://localhost:3000",
                 "http://localhost:5173",
                 "http://localhost:8080",
-                "https://soti-trace.vercel.app/" 
+                "https://soti-trace.vercel.app" 
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
